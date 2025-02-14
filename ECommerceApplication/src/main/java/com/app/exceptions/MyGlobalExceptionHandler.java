@@ -87,4 +87,11 @@ public class MyGlobalExceptionHandler {
 
 		return new ResponseEntity<APIResponse>(res, HttpStatus.BAD_REQUEST);
 	}
+
+	@ExceptionHandler(InvalidBankException.class)
+	public ResponseEntity<APIResponse> invalidBankException(InvalidBankException e) {
+		APIResponse res = new APIResponse(e.getMessage(), false);
+
+		return new ResponseEntity<APIResponse>(res, HttpStatus.BAD_REQUEST);
+	}
 }

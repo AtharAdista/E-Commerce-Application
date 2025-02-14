@@ -3,8 +3,12 @@ package com.app.services;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.app.exceptions.InvalidBankException;
+import com.app.payloads.BankDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -65,7 +69,9 @@ public class OrderServiceImpl implements OrderService {
 	public ModelMapper modelMapper;
 
 	@Override
-	public OrderDTO placeOrder(String email, Long cartId, String paymentMethod) {
+	public OrderDTO placeOrder(String email, Long cartId, String paymentMethod, BankDTO bank) {
+
+
 
 		Cart cart = cartRepo.findCartByEmailAndCartId(email, cartId);
 
@@ -124,7 +130,27 @@ public class OrderServiceImpl implements OrderService {
 		});
 
 		OrderDTO orderDTO = modelMapper.map(savedOrder, OrderDTO.class);
-		
+
+		Map<String, String> BANK_ACCOUNT_MAP = Map.of(
+				"BCA", "1234567890",
+				"Mandiri", "0987654321",
+				"BNI", "1122334455",
+				"BRI", "5566778899",
+				"Bank Jago", "1231212122",
+				"OCBC", "847261823",
+				"BSI","1293812903"
+		);
+
+		Set<String> allowedBanks = Set.of("Mandiri", "BCA", "BNI", "BRI", "Bank Jago", "OCBC", "BSI");
+
+		if (!allowedBanks.contains(bank.getBankSelected())){
+			throw new InvalidBankException("Only Mandiri, BCA, BNI, BRI, Bank Jago, OCBS, BSI are allowed");
+		}
+
+		orderDTO.setBank(new BankDTO());
+		orderDTO.getBank().setBankSelected(bank.getBankSelected());
+		orderDTO.getBank().setBankNumber(BANK_ACCOUNT_MAP.get(bank.getBankSelected()));
+
 		orderItems.forEach(item -> orderDTO.getOrderItems().add(modelMapper.map(item, OrderItemDTO.class)));
 
 		return orderDTO;
